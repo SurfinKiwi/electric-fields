@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Physics 196 Honors - Electric Field Calculation</title>
+    <style>
+        body {
+            background: linear-gradient(to right, #ff7e5f, #feb47b);
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            position: relative;
+        }
+
+        h1 {
+            text-align: center;
+            margin-top: 20px;
+            color: #333;
+        }
+
+        #canvasMain,
+        #canvas100Small,
+        #canvas1000Small {
+            border: 1px solid #000;
+            background-color: #fff;
+            transition: transform 0.3s;
+        }
+
+        #canvasMain:hover,
+        #canvas100Small:hover,
+        #canvas1000Small:hover {
+            transform: scale(1.05);
+        }
+
+        .diagram-container {
+            margin: 20px auto;
+            max-width: 800px;
+        }
+
+        .formulas-container {
+            padding: 10px;
+            border: 1px solid #000;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+            max-width: 600px;
+            margin: 20px auto;
+            text-align: left;
+        }
+
+        .highlight {
+            background-color: #ffffe0;
+            padding: 2px 4px;
+        }
+
+        .formulas-container:hover {
+            box-shadow: 0 0 15px rgba(255, 255, 0, 0.5);
+            transition: box-shadow 0.3s ease-in-out;
+        }
+
+        button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        .tesla-img {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 150px;
+            border: 2px solid #fff;
+            border-radius: 10px;
+        }
+
+        .slider-container {
+            margin: 20px;
+        }
+
+        .slider-label {
+            display: block;
+            margin-bottom: 10px;
+            font-size: 18px;
+            color: #333;
+        }
+
+        .animated-arrow {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 24px;
+            color: #ff5733;
+            animation: bounce 1s infinite;
+        }
+
+        @keyframes bounce {
+
+            0%,
+            20%,
+            50%,
+            80%,
+            100% {
+                transform: translateY(0);
+            }
+
+            40% {
+                transform: translateY(-30px);
+            }
+
+            60% {
+                transform: translateY(-15px);
+            }
+        }
+
+        .summary {
+            font-size: 18px;
+            color: #333;
+            margin: 20px auto;
+            max-width: 800px;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+    </style>
+    <script>
+        const k = 8.99e9; // Coulomb's constant (in N m^2/C^2)
+        const rodLength = 1.0; // Length of the rod (in meters)
+        const rodCharge = 1e-6; // Total charge of the rod (in Coulombs)
+        const pointDistance = 0.5; // Distance from point P to the rod (in meters)
+
+        function calculateElectricField(numPieces) {
+            let deltaX = rodLength / numPieces; // Width of each piece
+            let totalElectricField = 0; // Start with zero field
+
+            for (let i = 0; i < numPieces; i++) {
+                let x = i * deltaX + deltaX / 2; // Position of the middle of each piece
+                let dQ = rodCharge / rodLength * deltaX; // Charge of this piece
+                let distance = Math.sqrt(x * x + pointDistance * pointDistance); // Distance from piece to point P
+                let dE = k * dQ / (distance * distance); // Electric field from this piece
+
+                let angle = Math.atan2(pointDistance, x); // Angle of the field component
+                let dEx = dE * Math.cos(angle); // x-component of the field
+
+                totalElectricField += dEx; // Summing x-components
+            }
+
+            return totalElectricField; // Return the total field
+        }
+
+        function drawDiagram(numPieces, canvasId, eFieldValue, isSmall) {
+            const canvas = document.getElementById(canvasId);
+            const ctx = canvas.getContext('2d'); // Get drawing context
+
+            let deltaX = rodLength / numPieces; // Width of each piece
+            const pieceWidth = isSmall ? 5 : 10; // Adjust width for small diagrams
+            const pieceHeight = isSmall ? 10 : 20; // Adjust height for small diagrams
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = 'lightgray'; // Color for the rod
+            ctx.fillRect(50, 120, rodLength * (isSmall ? 150 : 300), 20); // Draw the rod
+
+            ctx.fillStyle = 'blue'; // Color for the pieces
+            for (let i = 0; i < numPieces; i++) {
+                let x = 50 + i * (rodLength * (isSmall ? 150 : 300) / numPieces); // Position of each piece
+                ctx.fillRect(x, 120, pieceWidth, pieceHeight); // Draw each piece
+            }
+
+            ctx.fillStyle = 'red'; // Color for the point of interest
+            const pointXPos = 50 + rodLength * (isSmall ? 150 : 300) + 100; // Point of interest position
+            ctx.beginPath();
+            ctx.arc(pointXPos, 130, 5, 0, 2 * Math.PI); // Position of the point
+            ctx.fill(); // Fill the point with color
+
+            ctx.strokeStyle = 'black'; // Color for the line segment
+            ctx.lineWidth = 2; // Width of the line
+            ctx.beginPath();
+            ctx.moveTo(50 + rodLength * (isSmall ? 150 : 300), 130); // Start of the line segment
+            ctx.lineTo(pointXPos, 130); // End of the line segment
+            ctx.stroke(); // Draw the line segment
+
+            ctx.fillStyle = 'black'; // Color for text
+            ctx.font = isSmall ? '12px Arial' : '16px Arial'; // Font style
+            ctx.fillText('Rod divided into ' + numPieces + ' pieces', 50, 100); // Title above the rod
+            ctx.fillText('Point of Interest (0.5m right of rod end)', pointXPos - (isSmall ? 75 : 150), 150); // Label for the point of interest
+
+            ctx.fillText('0.5m', (50 + rodLength * (isSmall ? 150 : 300) + pointXPos) / 2 - 20, 120); // Label for the distance
+
+            ctx.fillStyle = 'green'; // Color for the integral representation
+            ctx.font = isSmall ? '10px Arial' : '14px Arial'; // Font style
+            ctx.fillText('E = ∫ (k λ dx / (x² + d²)^(3/2))', 50 + rodLength * (isSmall ? 150 : 300) + 10, isSmall ? 140 : 180); // Integral formula
+            ctx.fillText('E_x = ∫ (k λ x dx / (x² + d²)^(3/2))', 50 + rodLength * (isSmall ? 150 : 300) + 10, isSmall ? 155 : 200); // x-component of the field
+
+            ctx.fillStyle = '#ffffe0'; // Pale yellow color
+            ctx.font = isSmall ? '12px Arial' : '16px Arial';
+            ctx.fillText(`E = ${eFieldValue.toFixed(2)} N/C`, 50 + rodLength * (isSmall ? 150 : 300) + 10, isSmall ? 175 : 220); // Field value
+        }
+
+        function displayResults() {
+            let eField100 = calculateElectricField(100);
+            let eField1000 = calculateElectricField(1000);
+
+            document.getElementById('resultMain').innerHTML = `Electric field for adjustable pieces: <span class="highlight">Adjust using the slider</span>`;
+
+            document.getElementById('formulas').innerHTML =
+                `<h3>Formulas Used</h3>` +
+                `<p>E = k * ∑(dQ / r^2)</p>` +
+                `<p>Where dQ = (total charge / length) * (piece width)</p>` +
+                `<p>r = √(x^2 + distance^2)</p>` +
+                `<p>E = Electric field at point P</p>` +
+                `<p>Vector components:</p>` +
+                `<p>E_x = ∫ (k λ x dx / (x² + d²)^(3/2))</p>`;
+
+            drawDiagram(100, 'canvasMain', eField100, false);
+            drawDiagram(1000, 'canvasMain', eField1000, false);
+
+            drawDiagram(100, 'canvas100Small', eField100, true);
+            drawDiagram(1000, 'canvas1000Small', eField1000, true);
+
+            document.getElementById('result100Small').innerHTML = `Electric field for 100 pieces: <span class="highlight">${eField100.toFixed(2)} N/C</span>`;
+            document.getElementById('result1000Small').innerHTML = `Electric field for 1000 pieces: <span class="highlight">${eField1000.toFixed(2)} N/C</span>`;
+        }
+
+        function showPopup() {
+            alert('Physics is fun! 😊');
+        }
+
+        function updateDiagram(numPieces) {
+            let eField = calculateElectricField(numPieces);
+            document.getElementById('resultMain').innerHTML = `Electric field for ${numPieces} pieces: <span class="highlight">${eField.toFixed(2)} N/C</span>`;
+            drawDiagram(numPieces, 'canvasMain', eField, false);
+        }
+
+        window.onload = displayResults;
+    </script>
+</head>
+
+<body>
+    <img src="https://i.postimg.cc/rmDnryp9/Electric-field.gif" alt="Electric Field" class="tesla-img">
+    <h1>Physics 196 Honors - Electric Field At Point P Calculation</h1>
+    <div class="formulas-container" id="formulas">
+        <span class="animated-arrow">→</span>
+    </div>
+    <div class="slider-container">
+        <label for="pieceSlider" class="slider-label">Adjust the number of pieces:</label>
+        <input type="range" id="pieceSlider" min="10" max="1000" step="10" value="100"
+            oninput="updateDiagram(this.value)">
+        <span id="pieceCount">1000</span> pieces
+    </div>
+    <div class="diagram-container">
+        <h2>Dynamic Diagram (Adjust Pieces)</h2>
+        <canvas id="canvasMain" width="800" height="300"></canvas>
+        <p id="resultMain"></p>
+    </div>
+    <div class="diagram-container">
+        <h2>Fixed Diagrams</h2>
+        <canvas id="canvas100Small" width="400" height="150"></canvas>
+        <p id="result100Small"></p>
+        <canvas id="canvas1000Small" width="400" height="150"></canvas>
+        <p id="result1000Small"></p>
+    </div>
+    <div class="summary">
+        In summary, by dividing the rod into more pieces, you get a more accurate result for the electric field. This is
+        because with more pieces, the approximation of the rod's charge distribution becomes finer, leading to a more
+        precise calculation of the field at the point of interest.
+    </div>
+    <button onclick="showPopup()">Press Me</button>
+</body>
+
+</html>
